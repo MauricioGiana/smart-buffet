@@ -1,7 +1,10 @@
 import { defineConfig } from 'prisma/config';
 
 export default defineConfig({
-  schema: 'prisma/schema.prisma',
+  // Multi-file schema: all *.prisma files inside prisma/ are merged.
+  // schema.prisma holds the generator + datasource blocks.
+  // Domain files: business.prisma, menu.prisma
+  schema: 'prisma/',
   migrations: {
     path: 'prisma/migrations',
   },
