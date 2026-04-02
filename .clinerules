@@ -1,0 +1,63 @@
+# 📜 Project Context: Smart-Buffet (SB)
+
+Modular AI-Driven OS for Gastronomy Businesses (SaaS Multi-tenant).
+
+## 🚀 Tech Stack & Runtime
+
+- **Runtime:** Node.js v24 LTS (Krypton).
+- **Package Manager:** pnpm (Mandatory). Use `pnpm add`, `pnpm install`, etc.
+- **Mandatory:** Use native `--env-file` flag (DO NOT install `dotenv`).
+- **Backend:** Fastify with TypeScript (Modular Plugin Architecture).
+- **ORM:** Prisma with PostgreSQL 16.
+- **Infrastructure:** Docker Compose for PostgreSQL (`service: db` on port 5432).
+
+## 🏗️ Architecture: Hexagonal-Light
+
+- **Separation of Concerns:** - `Domain`: Entities and Repository Contracts (Interfaces).
+  - `Application`: Services (CRUDs) and UseCases (Complex logic like OCR/Predict).
+  - `Infrastructure`: Prisma implementations, Fastify routes, and External APIs.
+- **Logic Organization:**
+  - **Services:** Group simple CRUDs (e.g., `ProductService`, `CategoryService`).
+  - **UseCases:** One class per complex action (e.g., `ProcessInvoiceUseCase`, `CalculatePredictiveStock`).
+- **Data Flow:** Controller -> Service/UseCase -> Repository -> Prisma.
+
+## 🔑 Multi-tenancy & Database
+
+- **Isolation:** Every tenant-scoped table (except `tenants`) MUST have a `tenant_id: String` field with an index.
+- **Naming Conventions:**
+  - **Database (PostgreSQL):** Use `snake_case` for tables and columns.
+  - **Code (TS):** Use `camelCase` for variables, properties, and DTOs.
+- **Prisma Mapping:** Always use `@map("column_name")` and `@@map("table_name")` to bridge the naming gap.
+- **Decimals:** Use `@db.Decimal(10, 2)` for prices and weights to prevent precision errors.
+
+## 🛠️ Coding Standards & Naming
+
+- **Interfaces:** DO NOT use "I" prefix (e.g., use `ProductRepository`, NOT `IProductRepository`).
+- **Implementations:** Be technology-specific (e.g., `PrismaProductRepository`, `ClaudeOcrProvider`).
+- **Functional Approach:** Favor clean, modular code and explicit dependency injection.
+- **Commits:** Small, descriptive commits for each finished task.
+
+## 📂 Project Structure (Internal Modules)
+
+- Root `/backend` contains the Fastify app.
+- Modules are decoupled inside `src/modules/`.
+- **Planned Core Modules:**
+  - `OCR`: Menu and Invoice processing with Claude 3.5 Sonnet.
+  - `Analytics`: SB-Predict engine for sales forecasting.
+  - `Integrations`: WhatsApp Meta API for order management.
+
+## ⚡ Environment & Workflow
+
+- Everything runs inside Docker for environment parity.
+- Use `docker compose up --build` to start the stack.
+- The app uses `tsx --watch` inside the container for Hot Reload.
+- DB is accessible from the host at `localhost:5432` for GUI tools (DBeaver/TablePlus).
+- App is accessible at `localhost:3000`.
+
+## Database Migrations & Evolution
+
+- **Source of Truth:** The `schema.prisma` is the only source of truth for the database structure.
+- **Migration Policy:** All changes to tables, columns, indexes, or constraints MUST be done through Prisma Migrations.
+- **Development Flow:** Use `pnpm prisma migrate dev` for local changes.
+- **Production Safety:** Never use `nvm prisma db push` in production; always use `migrate deploy`.
+- **Naming:** Migration names must be descriptive (e.g., `init_auth_tables`, `add_index_to_tenant_id`).

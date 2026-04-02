@@ -1,0 +1,66 @@
+// ─── Menu ─────────────────────────────────────────────────────────────────────
+
+model Menu {
+  id       String @id(map: "pk_menus") @default(uuid()) @db.Uuid @map("id")
+  tenantId String @db.Uuid                                       @map("tenant_id")
+
+  name String @db.VarChar(255) @map("name")
+  // Domain-validated values: "active" | "inactive"
+  status String @db.VarChar(30) @default("active") @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt       @map("updated_at")
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  categories Category[]
+
+  @@index([tenantId], map: "idx_menus_tenant_id")
+  @@map("menus")
+}
+
+// ─── Category ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id       String @id(map: "pk_categories") @default(uuid()) @db.Uuid @map("id")
+  tenantId String @db.Uuid                                             @map("tenant_id")
+  menuId   String @db.Uuid                                             @map("menu_id")
+
+  name     String @db.VarChar(255) @map("name")
+  position Int    @default(0)      @map("position")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt       @map("updated_at")
+
+  menu     Menu      @relation(fields: [menuId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@index([tenantId], map: "idx_categories_tenant_id")
+  @@index([menuId],   map: "idx_categories_menu_id")
+  @@map("categories")
+}
+
+// ─── Product ──────────────────────────────────────────────────────────────────
+
+model Product {
+  id         String @id(map: "pk_products") @default(uuid()) @db.Uuid @map("id")
+  tenantId   String @db.Uuid                                           @map("tenant_id")
+  categoryId String @db.Uuid                                           @map("category_id")
+
+  name        String  @db.VarChar(255)  @map("name")
+  description String? @db.VarChar(1000) @map("description")
+  imageUrl    String? @db.VarChar(2048) @map("image_url")
+
+  priceInCents Int @map("price_in_cents")
+
+  // Domain-validated values: "available" | "unavailable" | "out_of_stock"
+  status String @db.VarChar(30) @default("available") @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt       @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId],   map: "idx_products_tenant_id")
+  @@index([categoryId], map: "idx_products_category_id")
+  @@map("products")
+}
