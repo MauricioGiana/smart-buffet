@@ -1,0 +1,17 @@
+FROM node:24-alpine
+WORKDIR /usr/src/app
+
+RUN npm install -g pnpm@latest
+
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install
+
+COPY . .
+
+RUN pnpm prisma generate
+
+EXPOSE 3000
+ENV NODE_ENV=development
+
+CMD ["pnpm", "dev"]

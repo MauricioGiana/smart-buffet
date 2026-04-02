@@ -1,0 +1,10 @@
+// ⚠️  This file is superseded by the multi-file schema in prisma/schema/.
+// It is kept as an empty placeholder so git does not error on the path.
+// The active schema files are:
+//   prisma/schema/schema.prisma   ← generator + datasource
+//   prisma/schema/auth.prisma     ← User, TenantMember
+//   prisma/schema/business.prisma ← Tenant
+//   prisma/schema/menu.prisma     ← Menu, Category, Product
+//
+// prisma.config.ts points to prisma/schema/ — this file is ignored by Prisma CLI.
+

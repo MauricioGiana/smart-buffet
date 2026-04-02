@@ -1,0 +1,13 @@
+# Environment
+.env
+
+# Node
+node_modules/
+dist/
+
+# Prisma generated client
+src/generated/
+
+# OS
+.DS_Store
+*.log

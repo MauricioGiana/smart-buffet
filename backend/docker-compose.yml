@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sb-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user_sb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password_sb}
+      POSTGRES_DB: ${POSTGRES_DB:-smart_buffet_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_sb -d smart_buffet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    container_name: sb-app
+    # IMPORTANTE: Corremos como root para evitar líos de permisos con el bind mount
+    user: "root" 
+    volumes:
+      - .:/usr/src/app
+      # Este volumen anónimo protege los node_modules del contenedor 
+      # para que no se borren con los de tu host
+      - /usr/src/app/node_modules
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://user_sb:password_sb@db:5432/smart_buffet_db
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "pnpm prisma migrate dev && pnpm dev"
+
+volumes:
+  postgres_data:
