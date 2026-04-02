@@ -1,0 +1,143 @@
+// Smart-Buffet Prisma Schema
+// Rules: all DB columns snake_case via @map, all TS fields camelCase
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Tenant / Business ────────────────────────────────────────────────────────
+
+model Business {
+  id        String   @id @default(cuid()) @map("id")
+  name      String   @map("name")
+  slug      String   @unique @map("slug")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  menus     Menu[]
+  tables    Table[]
+  orders    Order[]
+
+  @@map("businesses")
+}
+
+// ─── Menu ─────────────────────────────────────────────────────────────────────
+
+model Menu {
+  id         String   @id @default(cuid()) @map("id")
+  businessId String   @map("business_id")
+  name       String   @map("name")
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categories MenuCategory[]
+
+  @@map("menus")
+}
+
+model MenuCategory {
+  id        String   @id @default(cuid()) @map("id")
+  menuId    String   @map("menu_id")
+  name      String   @map("name")
+  position  Int      @default(0) @map("position")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items     MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String   @id @default(cuid()) @map("id")
+  categoryId  String   @map("category_id")
+  name        String   @map("name")
+  description String?  @map("description")
+  priceInCents Int     @map("price_in_cents")
+  isAvailable Boolean  @default(true) @map("is_available")
+  imageUrl    String?  @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category    MenuCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+
+  @@map("menu_items")
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+
+model Table {
+  id         String      @id @default(cuid()) @map("id")
+  businessId String      @map("business_id")
+  number     Int         @map("number")
+  status     TableStatus @default(AVAILABLE) @map("status")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  orders     Order[]
+
+  @@unique([businessId, number])
+  @@map("tables")
+}
+
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+
+  @@map("table_status")
+}
+
+// ─── Order ────────────────────────────────────────────────────────────────────
+
+model Order {
+  id         String      @id @default(cuid()) @map("id")
+  businessId String      @map("business_id")
+  tableId    String?     @map("table_id")
+  status     OrderStatus @default(OPEN) @map("status")
+  totalInCents Int       @default(0) @map("total_in_cents")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  business   Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  table      Table?      @relation(fields: [tableId], references: [id])
+  items      OrderItem[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  OPEN
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+
+  @@map("order_status")
+}
+
+model OrderItem {
+  id           String   @id @default(cuid()) @map("id")
+  orderId      String   @map("order_id")
+  menuItemId   String   @map("menu_item_id")
+  quantity     Int      @map("quantity")
+  unitPriceInCents Int  @map("unit_price_in_cents")
+  notes        String?  @map("notes")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem     MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@map("order_items")
+}
