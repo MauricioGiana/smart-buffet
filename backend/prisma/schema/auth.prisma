@@ -1,39 +1,51 @@
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-// User: global identity record (email + password hash).
-// TenantMember: join table linking a User to a Tenant with a role string.
-//   role is validated in the Domain layer — e.g. "owner" | "manager" | "staff"
+/// Represents a unique customer or business account.
+model Tenant {
+  id            String    @id @default(uuid()) @db.Uuid @map("pk_tenant")
+  name          String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(100)
+  plan          String    @default("FREE") @db.VarChar(30)
+  status        String    @default("ACTIVE") @db.VarChar(30)
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  
+  members       Member[]
+  menus         Menu[]
+  products      Product[]
+  categories    Category[]
 
+  @@map("tenants")
+}
+
+/// Profile data mirrored from Supabase Auth.
 model User {
-  id           String @id(map: "pk_users") @default(uuid()) @db.Uuid @map("id")
+  id            String    @id @db.Uuid @map("pk_user") 
+  email         String    @unique @db.VarChar(255)
+  fullName      String?   @db.VarChar(255) @map("full_name")
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  email        String @unique @db.VarChar(255) @map("email")
-  passwordHash String @db.VarChar(255)         @map("password_hash")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt       @map("updated_at")
-
-  memberships TenantMember[]
+  memberships   Member[]
 
   @@map("users")
 }
 
-model TenantMember {
-  id       String @id(map: "pk_tenant_members") @default(uuid()) @db.Uuid @map("id")
-  tenantId String @db.Uuid                                                 @map("tenant_id")
+/// Join table for User-Tenant relationship.
+model Member {
+  id        String    @id @default(uuid()) @db.Uuid @map("pk_member")
+  tenantId  String    @db.Uuid @map("tenant_id")
+  userId    String    @db.Uuid @map("user_id")
+  role      String    @db.VarChar(50) @map("role") 
 
-  userId String @db.Uuid @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  // Domain-validated values: "owner" | "manager" | "staff"
-  role String @db.VarChar(30) @map("role")
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt       @map("updated_at")
-
-  user   User   @relation(fields: [userId],   references: [id], onDelete: Restrict)
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-
-  @@unique([userId, tenantId], map: "uq_tenant_members_user_tenant")
-  @@index([tenantId], map: "idx_tenant_members_tenant_id")
-  @@index([userId],   map: "idx_tenant_members_user_id")
-  @@map("tenant_members")
+  @@unique([tenantId, userId])
+  @@map("members")
 }

@@ -1,66 +1,88 @@
-// ─── Menu ─────────────────────────────────────────────────────────────────────
-
+/// Independent Menu entity belonging to a Tenant.
 model Menu {
-  id       String @id(map: "pk_menus") @default(uuid()) @db.Uuid @map("id")
-  tenantId String @db.Uuid                                       @map("tenant_id")
+  id          String    @id @default(uuid()) @db.Uuid @map("pk_menu")
+  tenantId    String    @db.Uuid @map("tenant_id")
+  name        String    @db.VarChar(100)
+  description String?   @db.VarChar(500)
+  status      String    @default("ACTIVE") @db.VarChar(30)
 
-  name String @db.VarChar(255) @map("name")
-  // Domain-validated values: "active" | "inactive"
-  status String @db.VarChar(30) @default("active") @map("status")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt       @map("updated_at")
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categories  MenuToCategory[]
 
-  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  categories Category[]
-
-  @@index([tenantId], map: "idx_menus_tenant_id")
+  @@index([tenantId], map: "ix_menu_tenant_id")
   @@map("menus")
 }
 
-// ─── Category ─────────────────────────────────────────────────────────────────
+/// Linking table to manage Category order per Menu.
+model MenuToCategory {
+  menuId      String @db.Uuid @map("menu_id")
+  categoryId  String @db.Uuid @map("category_id")
+  order       Int    @default(0)
 
+  menu        Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([menuId, categoryId], map: "pk_menu_to_category")
+  @@map("menu_to_categories")
+}
+
+/// Reusable Product groups.
 model Category {
-  id       String @id(map: "pk_categories") @default(uuid()) @db.Uuid @map("id")
-  tenantId String @db.Uuid                                             @map("tenant_id")
-  menuId   String @db.Uuid                                             @map("menu_id")
+  id        String    @id @default(uuid()) @db.Uuid @map("pk_category")
+  tenantId  String    @db.Uuid @map("tenant_id")
+  name      String    @db.VarChar(100)
+  status    String    @default("ACTIVE") @db.VarChar(30)
 
-  name     String @db.VarChar(255) @map("name")
-  position Int    @default(0)      @map("position")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt       @map("updated_at")
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  menus     MenuToCategory[]
+  products  CategoryToProduct[]
 
-  menu     Menu      @relation(fields: [menuId], references: [id], onDelete: Restrict)
-  products Product[]
-
-  @@index([tenantId], map: "idx_categories_tenant_id")
-  @@index([menuId],   map: "idx_categories_menu_id")
+  @@index([tenantId], map: "ix_category_tenant_id")
   @@map("categories")
 }
 
-// ─── Product ──────────────────────────────────────────────────────────────────
+/// Linking table to manage Product order per Category.
+model CategoryToProduct {
+  categoryId String @db.Uuid @map("category_id")
+  productId  String @db.Uuid @map("product_id")
+  order      Int    @default(0)
 
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([categoryId, productId], map: "pk_category_to_product")
+  @@map("category_to_products")
+}
+
+/// Core Product entity with multi-tenant SKU uniqueness.
 model Product {
-  id         String @id(map: "pk_products") @default(uuid()) @db.Uuid @map("id")
-  tenantId   String @db.Uuid                                           @map("tenant_id")
-  categoryId String @db.Uuid                                           @map("category_id")
+  id          String    @id @default(uuid()) @db.Uuid @map("pk_product")
+  tenantId    String    @db.Uuid @map("tenant_id")
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(1000)
+  price       Decimal   @db.Decimal(12, 2)
+  sku         String?   @db.VarChar(50) 
+  imageUrl    String?   @db.VarChar(500) @map("image_url")
+  status      String    @default("AVAILABLE") @db.VarChar(30)
 
-  name        String  @db.VarChar(255)  @map("name")
-  description String? @db.VarChar(1000) @map("description")
-  imageUrl    String? @db.VarChar(2048) @map("image_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
 
-  priceInCents Int @map("price_in_cents")
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categories  CategoryToProduct[]
 
-  // Domain-validated values: "available" | "unavailable" | "out_of_stock"
-  status String @db.VarChar(30) @default("available") @map("status")
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt       @map("updated_at")
-
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-
-  @@index([tenantId],   map: "idx_products_tenant_id")
-  @@index([categoryId], map: "idx_products_category_id")
+  /// Ensures SKU is unique per tenant only for active products.
+  @@unique([tenantId, sku, deletedAt], map: "uk_product_tenant_sku_active")
+  /// Faster global lookups by SKU.
+  @@index([sku], map: "ix_product_sku")
   @@map("products")
 }
