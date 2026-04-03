@@ -1,6 +1,6 @@
 /// Represents a unique customer or business account.
 model Tenant {
-  id            String    @id @default(uuid()) @db.Uuid @map("pk_tenant")
+  id            String    @id @default(uuid()) @db.Uuid @map("id")
   name          String    @db.VarChar(255)
   slug          String    @unique @db.VarChar(100)
   plan          String    @default("FREE") @db.VarChar(30)
@@ -20,7 +20,7 @@ model Tenant {
 
 /// Profile data mirrored from Supabase Auth.
 model User {
-  id            String    @id @db.Uuid @map("pk_user") 
+  id            String    @id @db.Uuid @map("id") 
   email         String    @unique @db.VarChar(255)
   fullName      String?   @db.VarChar(255) @map("full_name")
   
@@ -34,7 +34,7 @@ model User {
 
 /// Join table for User-Tenant relationship.
 model Member {
-  id        String    @id @default(uuid()) @db.Uuid @map("pk_member")
+  id        String    @id @default(uuid()) @db.Uuid @map("id")
   tenantId  String    @db.Uuid @map("tenant_id")
   userId    String    @db.Uuid @map("user_id")
   role      String    @db.VarChar(50) @map("role") 

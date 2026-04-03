@@ -1,6 +1,6 @@
 /// Independent Menu entity belonging to a Tenant.
 model Menu {
-  id          String    @id @default(uuid()) @db.Uuid @map("pk_menu")
+  id          String    @id @default(uuid()) @db.Uuid @map("id")
   tenantId    String    @db.Uuid @map("tenant_id")
   name        String    @db.VarChar(100)
   description String?   @db.VarChar(500)
@@ -32,7 +32,7 @@ model MenuToCategory {
 
 /// Reusable Product groups.
 model Category {
-  id        String    @id @default(uuid()) @db.Uuid @map("pk_category")
+  id        String    @id @default(uuid()) @db.Uuid @map("id")
   tenantId  String    @db.Uuid @map("tenant_id")
   name      String    @db.VarChar(100)
   status    String    @default("ACTIVE") @db.VarChar(30)
@@ -64,7 +64,7 @@ model CategoryToProduct {
 
 /// Core Product entity with multi-tenant SKU uniqueness.
 model Product {
-  id          String    @id @default(uuid()) @db.Uuid @map("pk_product")
+  id          String    @id @default(uuid()) @db.Uuid @map("id")
   tenantId    String    @db.Uuid @map("tenant_id")
   name        String    @db.VarChar(255)
   description String?   @db.VarChar(1000)

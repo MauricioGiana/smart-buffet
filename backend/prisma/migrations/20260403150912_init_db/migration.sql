@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "tenants" (
-    "pk_tenant" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "slug" VARCHAR(100) NOT NULL,
     "plan" VARCHAR(30) NOT NULL DEFAULT 'FREE',
@@ -9,23 +9,23 @@ CREATE TABLE "tenants" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "tenants_pkey" PRIMARY KEY ("pk_tenant")
+    CONSTRAINT "tenants_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "users" (
-    "pk_user" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "full_name" VARCHAR(255),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "users_pkey" PRIMARY KEY ("pk_user")
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "members" (
-    "pk_member" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "user_id" UUID NOT NULL,
     "role" VARCHAR(50) NOT NULL,
@@ -33,12 +33,12 @@ CREATE TABLE "members" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "members_pkey" PRIMARY KEY ("pk_member")
+    CONSTRAINT "members_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "menus" (
-    "pk_menu" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" VARCHAR(500),
@@ -47,7 +47,7 @@ CREATE TABLE "menus" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "menus_pkey" PRIMARY KEY ("pk_menu")
+    CONSTRAINT "menus_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -61,7 +61,7 @@ CREATE TABLE "menu_to_categories" (
 
 -- CreateTable
 CREATE TABLE "categories" (
-    "pk_category" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "status" VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
@@ -69,7 +69,7 @@ CREATE TABLE "categories" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "categories_pkey" PRIMARY KEY ("pk_category")
+    CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -83,7 +83,7 @@ CREATE TABLE "category_to_products" (
 
 -- CreateTable
 CREATE TABLE "products" (
-    "pk_product" UUID NOT NULL,
+    "id" UUID NOT NULL,
     "tenant_id" UUID NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "description" VARCHAR(1000),
@@ -95,7 +95,7 @@ CREATE TABLE "products" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "products_pkey" PRIMARY KEY ("pk_product")
+    CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -120,28 +120,28 @@ CREATE INDEX "ix_product_sku" ON "products"("sku");
 CREATE UNIQUE INDEX "uk_product_tenant_sku_active" ON "products"("tenant_id", "sku", "deleted_at");
 
 -- AddForeignKey
-ALTER TABLE "members" ADD CONSTRAINT "members_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("pk_tenant") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "members" ADD CONSTRAINT "members_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("pk_user") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "members" ADD CONSTRAINT "members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "menus" ADD CONSTRAINT "menus_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("pk_tenant") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "menus" ADD CONSTRAINT "menus_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "menu_to_categories" ADD CONSTRAINT "menu_to_categories_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "menus"("pk_menu") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "menu_to_categories" ADD CONSTRAINT "menu_to_categories_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "menus"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "menu_to_categories" ADD CONSTRAINT "menu_to_categories_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("pk_category") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "menu_to_categories" ADD CONSTRAINT "menu_to_categories_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "categories" ADD CONSTRAINT "categories_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("pk_tenant") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "categories" ADD CONSTRAINT "categories_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "category_to_products" ADD CONSTRAINT "category_to_products_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("pk_category") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "category_to_products" ADD CONSTRAINT "category_to_products_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "category_to_products" ADD CONSTRAINT "category_to_products_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("pk_product") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "category_to_products" ADD CONSTRAINT "category_to_products_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "products" ADD CONSTRAINT "products_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("pk_tenant") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "products" ADD CONSTRAINT "products_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
