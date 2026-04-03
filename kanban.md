@@ -1,86 +1,61 @@
 # Smart-Buffet — Kanban Board
 
-> Last updated: 2026-04-02 (rev 2)
+> Last updated: 2026-04-03 (rev 3) - Focus: Identity & Auth First
 
 ---
 
 ## ✅ DONE
 
-### Task 1 — Project Initialization & Infrastructure Boilerplate
+### Task 1 — Project Initialization & Infrastructure
 
-**Status:** Code complete. Migration pending Docker access (see note below).
-
-**Completed:**
-
-- [x] `/backend` folder initialized with `pnpm init` (pnpm v10 / Node v24 LTS)
-- [x] `package.json` — name: `smart-buffet-api`, all scripts configured:
-  - `dev`: `node --env-file=.env --import tsx --watch src/server.ts` ✅ (native Node.js env, NO dotenv)
-  - `build`, `start`, `prisma:migrate`, `prisma:generate`
-- [x] `tsconfig.json` — strict mode, `target: ESNext`, `module: NodeNext`, `outDir: dist`
-- [x] `src/server.ts` — Fastify app with `logger: true`, `/health` endpoint, `0.0.0.0` host
-- [x] `backend/docker-compose.yml` — PostgreSQL 16, user: `user_sb`, db: `smart_buffet_db`, port 5432, healthcheck
-- [x] `docker-compose.yml` (root) — delegates to `./backend` context so `docker compose up --build` works from project root
-- [x] `.env` — `DATABASE_URL`, `PORT=3000`, `NODE_ENV=development` (native Node.js `--env-file`)
-- [x] `.env.example` — template with empty values
-- [x] `.gitignore` — `.env`, `node_modules/`, `dist/`, `src/generated/`
-- [x] `prisma.config.ts` — Prisma 7 config, no dotenv, reads `process.env['DATABASE_URL']`
-- [x] `prisma/schema.prisma` — validated ✅ with 3 models:
-  - `Tenant` → table `tenants` (renamed from older `Business` concept)
-  - `Category` → table `categories` (tenantId → `tenant_id`, @@index)
-  - `Product` → table `products` (tenantId → `tenant_id`, categoryId → `category_id`, `@db.Decimal(10,2)`, @@index)
-- [x] Hexagonal-Light folder structure:
-  - `src/modules/core/domain/`
-  - `src/modules/core/application/`
-  - `src/modules/core/infrastructure/`
-- [x] All column names snake_case via `@map` / `@@map`
-- [x] All TS code camelCase
-- [x] No `I` prefix on interfaces (convention established)
-
-**⚠️ Pending — Run after getting Docker access:**
-
-```bash
-# Add mgiana to docker group (run as maudev or with sudo):
-sudo usermod -aG docker mgiana
-# Then re-login or start a new shell session, then:
-
-# From project root (docker-compose.yml now lives here):
-docker compose up --build -d
-# Wait ~5s for Postgres to be healthy, then:
-cd backend
-pnpm prisma migrate dev --name init_core_models
-pnpm prisma generate
-```
+- [x] Backend folder initialized (pnpm v10 / Node v24 LTS).
+- [x] Native Environment management (`--env-file`) configured.
+- [x] Docker setup: PostgreSQL 16 + Healthchecks + Isolated Network.
+- [x] Prisma Config & Multi-file schema support.
+- [x] Core Database Models: `Tenant`, `User`, `Member` (Multi-tenancy & Soft Delete).
+- [x] Hexagonal-Light folder structure established.
 
 ---
 
-## 🔜 BACKLOG
+## 🚀 IN PROGRESS
 
-### Task 2 — Core Domain Models (TypeScript)
+### Task 2 — Auth & Identity (The "Secure Slice")
 
-- Define `Tenant`, `Category`, `Product` entities in `src/modules/core/domain/`
-- Define repository contracts: `TenantRepository`, `CategoryRepository`, `ProductRepository`
+_Goal: Link Supabase JWT with business logic and enforce `tenant_id` context._
 
-### Task 3 — Core Infrastructure (Prisma Repositories)
+- [ ] **Infrastructure (Fastify):** Implement `AuthMiddleware`.
+  - Validate Supabase JWT.
+  - Inject `sub` (user_id) and `email` into the `request` object.
+- [ ] **Domain/Application:** Create `RegisterBusinessUseCase`.
+  - Orchestrate via `@transaction`: Create `Tenant` + Create `User` + Create `Member` (Role: OWNER).
+  - Implement "White-List" (Allowed Emails) validation for the MVP.
+- [ ] **Infrastructure (Routes):** Endpoint `POST /auth/onboarding`.
+  - Receive business metadata and execute atomic provisioning.
 
-- Implement `PrismaTenantRepository`, `PrismaCategoryRepository`, `PrismaProductRepository`
-- Wire up Prisma Client singleton
+---
 
-### Task 4 — Core Application (CRUD Services)
+## 🔜 BACKLOG (Prioritized Slices)
 
-- Implement `TenantService`, `CategoryService`, `ProductService`
-- Fastify routes under `src/modules/core/infrastructure/`
+### Task 3 — Tenant Context & Global Filters
 
-### Task 5 — OCR Module
+- [ ] Create `TenantContext` to persist `tenant_id` during the request lifecycle.
+- [ ] Implement Prisma Extension for automatic filtering by `tenant_id` and `deleted_at` (Soft Delete).
 
-- `ProcessInvoiceUseCase` with Claude 3.5 Sonnet integration
-- Menu OCR pipeline
+### Task 4 — Catalog Module: First Steps
 
-### Task 6 — Analytics Module (SB-Predict)
+- [ ] **UseCase:** `GetCatalog` (List categories and products for the logged-in tenant).
+- [ ] **UseCase:** `CreateCategory` / `CreateProduct`.
+- [ ] **Domain:** Association table logic for ordering (`MenuToCategory`, etc).
 
-- `CalculatePredictiveStock` UseCase
-- Sales forecasting engine
+### Task 5 — Security & RBAC
 
-### Task 7 — Integrations Module
+- [ ] Define permissions by roles (`OWNER`, `ADMIN`, `STAFF`).
+- [ ] Role-based authorization middleware leveraging the `Member` table.
 
-- WhatsApp Meta API adapter
-- Order management via `WhatsAppMetaAdapter`
+---
+
+## 🧊 ICEBOX (Post-MVP)
+
+- [ ] **Task 6 — OCR Module:** Claude 3.5 Sonnet integration for invoice/menu processing.
+- [ ] **Task 7 — Analytics (SB-Predict):** Predictive engine for stock and sales forecasting.
+- [ ] **Task 8 — WhatsApp Integrations:** Meta API adapter and order management.
