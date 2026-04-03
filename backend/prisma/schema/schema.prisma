@@ -1,0 +1,24 @@
+// Smart-Buffet — base schema
+// Generator and datasource only. Domain models live in separate files:
+//   auth.prisma     → User, BusinessMember
+//   business.prisma → Business (Tenant root)
+//   menu.prisma     → Menu, Category, Product
+//
+// Conventions (enforced across all files):
+//   - All IDs:       @db.Uuid  +  @id(map: "pk_<table>")  +  @default(uuid())
+//   - All PK names:  pk_<tablename>
+//   - DB columns:    snake_case via @map
+//   - TS fields:     camelCase
+//   - No DB enums:   use @db.VarChar(30) + validate in Domain layer (Zod/TS)
+//   - FK safety:     ON DELETE Restrict on all relations
+//   - Multi-tenancy: every table carries tenant_id UUID with @@index
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "postgresql"
+}

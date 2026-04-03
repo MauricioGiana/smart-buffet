@@ -1,0 +1,23 @@
+FROM node:24-alpine
+WORKDIR /usr/src/app
+
+# Instalamos pnpm
+RUN npm install -g pnpm@latest
+
+# Copiamos solo los archivos de dependencias primero para cachear
+COPY package.json pnpm-lock.yaml ./
+
+# Instalamos dependencias (aquí se crea node_modules)
+RUN pnpm install
+
+# Copiamos el resto del código
+COPY . .
+
+# Generamos el cliente de Prisma (importante hacerlo aquí también)
+RUN pnpm prisma generate
+
+EXPOSE 3000
+ENV NODE_ENV=development
+
+# El comando se queda en el Compose para que sea flexible
+CMD ["pnpm", "dev"]

@@ -1,0 +1,51 @@
+/// Represents a unique customer or business account.
+model Tenant {
+  id            String    @id @default(uuid()) @db.Uuid @map("id")
+  name          String    @db.VarChar(255)
+  slug          String    @unique @db.VarChar(100)
+  plan          String    @default("FREE") @db.VarChar(30)
+  status        String    @default("ACTIVE") @db.VarChar(30)
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+  
+  members       Member[]
+  menus         Menu[]
+  products      Product[]
+  categories    Category[]
+
+  @@map("tenants")
+}
+
+/// Profile data mirrored from Supabase Auth.
+model User {
+  id            String    @id @db.Uuid @map("id") 
+  email         String    @unique @db.VarChar(255)
+  fullName      String?   @db.VarChar(255) @map("full_name")
+  
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  memberships   Member[]
+
+  @@map("users")
+}
+
+/// Join table for User-Tenant relationship.
+model Member {
+  id        String    @id @default(uuid()) @db.Uuid @map("id")
+  tenantId  String    @db.Uuid @map("tenant_id")
+  userId    String    @db.Uuid @map("user_id")
+  role      String    @db.VarChar(50) @map("role") 
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@map("members")
+}
