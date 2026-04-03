@@ -1,12 +1,12 @@
+import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
-  // Prisma will automatically look for DATABASE_URL in process.env
-  schema: "prisma/",
+  schema: "prisma/schema/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: process.env["DATABASE_URL"],
   },
 });
