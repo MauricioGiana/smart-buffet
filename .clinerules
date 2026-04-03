@@ -5,59 +5,53 @@ Modular AI-Driven OS for Gastronomy Businesses (SaaS Multi-tenant).
 ## 🚀 Tech Stack & Runtime
 
 - **Runtime:** Node.js v24 LTS (Krypton).
-- **Package Manager:** pnpm (Mandatory). Use `pnpm add`, `pnpm install`, etc.
-- **Mandatory:** Use native `--env-file` flag (DO NOT install `dotenv`).
+- **Package Manager:** pnpm (Mandatory).
+- **Environment:** Use native `--env-file` flag (No `dotenv` library).
 - **Backend:** Fastify with TypeScript (Modular Plugin Architecture).
 - **ORM:** Prisma with PostgreSQL 16.
-- **Infrastructure:** Docker Compose for PostgreSQL (`service: db` on port 5432).
+- **Infrastructure:** Docker Compose for local development and Multi-stage builds for Production.
 
 ## 🏗️ Architecture: Hexagonal-Light
 
-- **Separation of Concerns:** - `Domain`: Entities and Repository Contracts (Interfaces).
-  - `Application`: Services (CRUDs) and UseCases (Complex logic like OCR/Predict).
-  - `Infrastructure`: Prisma implementations, Fastify routes, and External APIs.
-- **Logic Organization:**
-  - **Services:** Group simple CRUDs (e.g., `ProductService`, `CategoryService`).
-  - **UseCases:** One class per complex action (e.g., `ProcessInvoiceUseCase`, `CalculatePredictiveStock`).
+- **Separation of Concerns:**
+  - `Domain`: Entities and Repository Contracts (Interfaces).
+  - `Application`: Services (CRUDs) and UseCases (Complex logic).
+  - `Infrastructure`: Prisma implementations, Fastify routes, Supabase Auth integration.
 - **Data Flow:** Controller -> Service/UseCase -> Repository -> Prisma.
+- **Dependency Injection:** Favor functional approaches and explicit injection.
 
-## 🔑 Multi-tenancy & Database
+## 🔑 Database & Multi-tenancy
 
-- **Isolation:** Every tenant-scoped table (except `tenants`) MUST have a `tenant_id: String` field with an index.
+- **Isolation:** Every tenant-scoped table MUST have a `tenant_id: Uuid` field.
+- **Soft Delete:** ALL tables must include `deleted_at: DateTime?`.
+  - **Rule:** Deleted records must be filtered out in all `find` operations (Use Prisma Extensions/Middlewares).
 - **Naming Conventions:**
-  - **Database (PostgreSQL):** Use `snake_case` for tables and columns.
-  - **Code (TS):** Use `camelCase` for variables, properties, and DTOs.
-- **Prisma Mapping:** Always use `@map("column_name")` and `@@map("table_name")` to bridge the naming gap.
-- **Decimals:** Use `@db.Decimal(10, 2)` for prices and weights to prevent precision errors.
+  - **Database (PostgreSQL):** `snake_case` for tables/columns.
+  - **Code (TS):** `camelCase` for variables/DTOs.
+  - **Indexes:** Use `pk_` for primary keys, `uk_` for unique keys, and `ix_` for indexes.
+- **Uniqueness & Soft Delete:** Composite unique indexes MUST include `deleted_at` to allow re-creating records with the same business key (e.g., `@@unique([tenantId, sku, deletedAt], map: "uk_product_tenant_sku_active")`).
+- **Data Integrity:** Use `@db.Decimal(12, 2)` for all financial fields (Prices) to prevent precision errors.
 
-## 🛠️ Coding Standards & Naming
+## 🍱 Menu & Gastronomic Logic
 
-- **Interfaces:** DO NOT use "I" prefix (e.g., use `ProductRepository`, NOT `IProductRepository`).
-- **Implementations:** Be technology-specific (e.g., `PrismaProductRepository`, `ClaudeOcrProvider`).
-- **Functional Approach:** Favor clean, modular code and explicit dependency injection.
-- **Commits:** Small, descriptive commits for each finished task.
+- **Decoupled Menus:** A `Tenant` can have multiple `Menus`.
+- **Flexible Ordering:** Use Join Tables (`MenuToCategory`, `CategoryToProduct`) to manage the `order` property. This allows the same product to exist in different menus/categories with different positions.
+- **SKU Policy:** SKUs are unique per `Tenant` (considering only active records).
 
-## 📂 Project Structure (Internal Modules)
+## 🔐 Auth & Users
 
-- Root `/backend` contains the Fastify app.
-- Modules are decoupled inside `src/modules/`.
-- **Planned Core Modules:**
-  - `OCR`: Menu and Invoice processing with Claude 3.5 Sonnet.
-  - `Analytics`: SB-Predict engine for sales forecasting.
-  - `Integrations`: WhatsApp Meta API for order management.
+- **Supabase Integration:** The `User` table `pk_user` MUST match the Supabase `auth.users.id` (UUID).
+- **User Uniqueness:** `email` is a **Global Unique** field (does not depend on `tenant_id` or `deleted_at`).
+- **Memberships:** A `User` connects to a `Tenant` through the `Member` table with a single `role` (String-based: OWNER, ADMIN, WAITER, etc.).
 
-## ⚡ Environment & Workflow
+## 📂 Project Structure
 
-- Everything runs inside Docker for environment parity.
-- Use `docker compose up --build` to start the stack.
-- The app uses `tsx --watch` inside the container for Hot Reload.
-- DB is accessible from the host at `localhost:5432` for GUI tools (DBeaver/TablePlus).
-- App is accessible at `localhost:3000`.
+- Modules decoupled inside `src/modules/` (e.g., `auth`, `menu`, `orders`).
+- **Prisma Schema:** Organized in `prisma/schema/*.prisma` or a single `schema.prisma` with clear blocks.
 
-## Database Migrations & Evolution
+## ⚡ Workflow & Migrations
 
-- **Source of Truth:** The `schema.prisma` is the only source of truth for the database structure.
-- **Migration Policy:** All changes to tables, columns, indexes, or constraints MUST be done through Prisma Migrations.
-- **Development Flow:** Use `pnpm prisma migrate dev` for local changes.
-- **Production Safety:** Never use `nvm prisma db push` in production; always use `migrate deploy`.
-- **Naming:** Migration names must be descriptive (e.g., `init_auth_tables`, `add_index_to_tenant_id`).
+- **Source of Truth:** `schema.prisma`.
+- **Migration Policy:** All structural changes MUST be via Prisma Migrations.
+- **Naming:** Migration names must be descriptive (e.g., `init_smart_buffet_v1`).
+- **Soft Delete Logic:** Use `update({ data: { deletedAt: new Date() } })` instead of `delete()`.
