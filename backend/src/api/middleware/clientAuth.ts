@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { env } from "../../config/env";
+import { env } from "@/api/config/env";
 
 export interface AuthUser {
   id: string;

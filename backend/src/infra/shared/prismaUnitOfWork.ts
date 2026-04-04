@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { UnitOfWork } from "../../../core/shared/ports/unitOfWork";
+import { UnitOfWork } from "../../core/shared/unitOfWork";
 
 export class PrismaUnitOfWork implements UnitOfWork {
   constructor(private prisma: PrismaClient) {}

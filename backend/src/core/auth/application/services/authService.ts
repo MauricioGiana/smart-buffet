@@ -1,13 +1,13 @@
 import { randomUUID } from "crypto";
-import { UnitOfWork } from "../../../shared/ports/unitOfWork";
-import { UserRepository } from "../../domain/repositories/userRepository";
-import { TenantRepository } from "../../domain/repositories/tenantRepository";
-import { MemberRepository } from "../../domain/repositories/memberRepository";
-import { User } from "../../domain/entities/user";
-import { Tenant } from "../../domain/entities/tenant";
-import { Member, MEMBER_ROLE } from "../../domain/entities/member";
+import { UnitOfWork } from "@/core/shared/unitOfWork";
+import { UserRepository } from "@core/auth/domain/repositories/userRepository";
+import { TenantRepository } from "@core/auth/domain/repositories/tenantRepository";
+import { MemberRepository } from "@core/auth/domain/repositories/memberRepository";
+import { User } from "@core/auth/domain/entities/user";
+import { Tenant } from "@core/auth/domain/entities/tenant";
+import { Member, MEMBER_ROLE } from "@core/auth/domain/entities/member";
 
-export class RegisterBusinessUseCase {
+export class AuthService {
   constructor(
     private unitOfWork: UnitOfWork,
     private userRepository: UserRepository,
@@ -16,7 +16,7 @@ export class RegisterBusinessUseCase {
     private allowedEmails: string[],
   ) {}
 
-  async execute(
+  async registerBusiness(
     businessName: string,
     userId: string,
     email: string,

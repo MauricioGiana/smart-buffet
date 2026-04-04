@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { TenantRepository } from "../../../core/auth/domain/repositories/tenantRepository";
-import { Tenant } from "../../../core/auth/domain/entities/tenant";
+import { TenantRepository } from "@core/auth/domain/repositories/tenantRepository";
+import { Tenant } from "@core/auth/domain/entities/tenant";
 
 export class PrismaTenantRepository implements TenantRepository {
   constructor(private prisma: PrismaClient) {}

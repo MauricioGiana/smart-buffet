@@ -12,7 +12,15 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@core/*": ["src/core/*"],
+      "@infra/*": ["src/infra/*"],
+      "@shared/*": ["src/core/shared/*"],
+      "@config/*": ["src/api/config/*"]
+    }
   },
   "include": ["src/**/*", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]

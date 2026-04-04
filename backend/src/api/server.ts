@@ -1,11 +1,11 @@
 import Fastify from "fastify";
-import { env } from "../config/env";
+import { env } from "./config/env";
 import sensible from "@fastify/sensible";
 import {
   validatorCompiler,
   serializerCompiler,
 } from "fastify-type-provider-zod";
-import { authRoutes } from "./routes/auth";
+import { authRoutes } from "./routes/auth.routes";
 
 const app = Fastify({ logger: true });
 
