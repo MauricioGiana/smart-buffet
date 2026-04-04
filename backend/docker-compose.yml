@@ -42,7 +42,7 @@ services:
       db:
         condition: service_healthy
     command: >
-      sh -c "pnpm prisma migrate dev && pnpm tsx --watch --env-file=.env src/server.ts"
+      sh -c "pnpm prisma migrate dev && pnpm tsx --watch --env-file=.env src/infra/http/fastifyServer.ts"
 
 networks:
   sb-network:

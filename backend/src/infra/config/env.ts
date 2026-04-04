@@ -12,7 +12,6 @@ const envSchema = z.object({
 
   // Supabase (Auth)
   SUPABASE_JWT_SECRET: z.string().min(10),
-  SUPABASE_URL: z.string().url(),
 
   // App Logic
   ALLOWED_EMAILS: z.string().transform((str) =>

@@ -48,4 +48,4 @@ EXPOSE 3000
 
 # Run the compiled application
 # Note: Database migrations should be handled via 'prisma migrate deploy' in CI/CD pipelines
-CMD ["node", "dist/server.js"]
+CMD ["node"]

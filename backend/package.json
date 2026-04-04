@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Smart-Buffet API",
-  "main": "dist/server.js",
+  "main": "dist/infra/http/fastifyServer.js",
   "scripts": {
-    "dev": "node --env-file=.env --import tsx --watch src/server.ts",
+    "dev": "node --env-file=.env --import tsx --watch src/infra/http/fastifyServer.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/infra/http/fastifyServer.js",
     "prisma:migrate": "pnpm prisma migrate dev",
     "prisma:generate": "pnpm prisma generate"
   },
@@ -16,6 +16,7 @@
   "packageManager": "pnpm@10.33.0",
   "dependencies": {
     "@fastify/sensible": "^6.0.4",
+    "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "dotenv": "^17.4.0",
     "fastify": "^5.8.4",

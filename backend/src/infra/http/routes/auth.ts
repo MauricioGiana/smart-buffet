@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaUnitOfWork } from "../../shared/adapters/prismaUnitOfWork";
 import { PrismaUserRepository } from "../../auth/repositories/prismaUserRepository";
 import { PrismaTenantRepository } from "../../auth/repositories/prismaTenantRepository";
@@ -9,7 +10,11 @@ import { onboardingRequestSchema } from "../schemas/auth";
 import { clientAuth } from "../middleware/clientAuth";
 import { env } from "../../config/env";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({ adapter });
 const unitOfWork = new PrismaUnitOfWork(prisma);
 const userRepository = new PrismaUserRepository(prisma);
 const tenantRepository = new PrismaTenantRepository(prisma);
